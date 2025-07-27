@@ -43,6 +43,7 @@ jobs:
 
       - name: Run tests
         run: |
+          mkdir -m 0777 tmp
           docker run --rm -v $(pwd):/working -w /working ghcr.io/sjinks/gauntlt:latest
 
       - name: Push image
