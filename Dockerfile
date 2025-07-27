@@ -1,75 +1,59 @@
-FROM ubuntu:20.04
-MAINTAINER james@gauntlt.org
+FROM ubuntu:24.04
 
-ARG ARACHNI_VERSION=arachni-1.5.1-0.5.12
-ARG DEBIAN_FRONTEND=noninteractive
+ENV ARACHNI_TAG=v1.6.1.3
+ENV ARACHNI_VERSION=1.6.1.3-0.6.1.1
+ENV DEBIAN_FRONTEND=noninteractive
 
-
-# Install Ruby and other OS stuff
-RUN apt-get update && \
-    apt-get install -y build-essential \
-      bzip2 \
-      ca-certificates \
-      curl \
-      gcc \
-      git \
-      libcurl4 \
-      libcurl4-openssl-dev \
-      wget \
-      zlib1g-dev \
-      libfontconfig \
-      libxml2-dev \
-      libxslt1-dev \
-      make \
-      python3-pip \
-      ruby \
-      ruby-dev \
-      ruby-bundler && \
+RUN \
+    apt-get update && \
+    apt-get install -y --no-install-recommends gcc libc6-dev libffi-dev make ruby ruby-dev && \
+    apt-get install -y --no-install-recommends curl wget && \
+    gem install gauntlt && \
+    sed -i 's/File.exists/File.exist/g' /var/lib/gems/*/gems/gauntlt-*/lib/gauntlt/attack_adapters/support/*_helper.rb && \
+    apt-get remove -y gcc libc6-dev libffi-dev make ruby-dev && \
+    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
-
-# Install Gauntlt
-RUN gem install rake
-RUN gem install ffi -v 1.9.18
-RUN gem install gauntlt
 
 # Install Attack tools
 WORKDIR /opt
 
 # arachni
-RUN wget https://github.com/Arachni/arachni/releases/download/v1.5.1/${ARACHNI_VERSION}-linux-x86_64.tar.gz && \
-    tar xzvf ${ARACHNI_VERSION}-linux-x86_64.tar.gz > /dev/null && \
-    mv ${ARACHNI_VERSION} /usr/local && \
-    ln -s /usr/local/${ARACHNI_VERSION}/bin/* /usr/local/bin/
+RUN \
+    wget --progress=dot:giga "https://github.com/Arachni/arachni/releases/download/${ARACHNI_TAG}/arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz" && \
+    tar xzf "arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz" && \
+    mv "arachni-${ARACHNI_VERSION}" /usr/local && \
+    ln -s "/usr/local/arachni-${ARACHNI_VERSION}/bin/"* /usr/local/bin/ && \
+    rm -f "arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz"
 
 # Nikto
-RUN apt-get update && \
-    apt-get install -y libtimedate-perl \
-      libnet-ssleay-perl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN git clone --depth=1 https://github.com/sullo/nikto.git && \
-    cd nikto/program && \
+RUN \
+    apt-get update && \
+    apt-get install -y libtimedate-perl libnet-ssleay-perl && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p nikto && \
+    cd nikto && \
+    wget https://github.com/sullo/nikto/tarball/master -O - | tar -xz --strip-components=1 -f - && \
+    rm -rf .github devdocs documentation && \
+    cd program && \
     echo "EXECDIR=/opt/nikto/program" >> nikto.conf && \
     ln -s /opt/nikto/program/nikto.conf /etc/nikto.conf && \
     chmod +x nikto.pl && \
     ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto
 
 # sqlmap
-WORKDIR /opt
-ENV SQLMAP_PATH /opt/sqlmap/sqlmap.py
-RUN git clone --depth=1 https://github.com/sqlmapproject/sqlmap.git
+ENV SQLMAP_PATH=/opt/sqlmap/sqlmap.py
+RUN \
+    mkdir sqlmap && \
+    cd sqlmap && \
+    wget https://github.com/sqlmapproject/sqlmap/tarball/master -O - | tar -xz --strip-components=1 -f - && \
+    rm -rf .github doc
 
 # dirb
-COPY vendor/dirb222.tar.gz dirb222.tar.gz
-
-RUN tar xvfz dirb222.tar.gz > /dev/null && \
-    cd dirb222 && \
-    chmod 755 ./configure && \
-    ./configure && \
-    make && \
-    ln -s /opt/dirb222/dirb /usr/local/bin/dirb
-
-ENV DIRB_WORDLISTS /opt/dirb222/wordlists
+ENV DIRB_WORDLISTS=/usr/share/dirb/wordlists
+RUN \
+    apt-get update && \
+    apt-get install -y dirb && \
+    rm -rf /var/lib/apt/lists/*
 
 # nmap
 RUN apt-get update && \
@@ -77,7 +61,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # sslyze
-RUN pip install sslyze
-ENV SSLYZE_PATH /usr/local/bin/sslyze
+ENV SSLYZE_PATH=/usr/local/bin/sslyze
+RUN \
+    apt-get update && \
+    apt-get install -y --no-install-recommends python-is-python3 python3 python3-pip && \
+    pip install --break-system-packages sslyze && \
+    apt-get remove -y python3-pip && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
+USER ubuntu
 ENTRYPOINT [ "/usr/local/bin/gauntlt" ]
