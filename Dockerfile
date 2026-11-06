@@ -1,6 +1,9 @@
+# The upstream Arachni release assets were removed. Preserve the installation
+# from our last published image, pinned so future image builds cannot change it.
+FROM ghcr.io/sjinks/gauntlt@sha256:45aebde4fee2b47ce23babdb88fb6fd12b6c116644f4467cf20a22ed6b463417 AS arachni
+
 FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
 
-ENV ARACHNI_TAG=v1.6.1.3
 ENV ARACHNI_VERSION=1.6.1.3-0.6.1.1
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -18,12 +21,9 @@ RUN \
 WORKDIR /opt
 
 # arachni
+COPY --from=arachni /usr/local/arachni-${ARACHNI_VERSION} /usr/local/arachni-${ARACHNI_VERSION}
 RUN \
-    wget --progress=dot:giga "https://github.com/Arachni/arachni/releases/download/${ARACHNI_TAG}/arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz" && \
-    tar xzf "arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz" && \
-    mv "arachni-${ARACHNI_VERSION}" /usr/local && \
-    ln -s "/usr/local/arachni-${ARACHNI_VERSION}/bin/"* /usr/local/bin/ && \
-    rm -f "arachni-${ARACHNI_VERSION}-linux-x86_64.tar.gz"
+    ln -s "/usr/local/arachni-${ARACHNI_VERSION}/bin/"* /usr/local/bin/
 
 # Nikto
 RUN \
