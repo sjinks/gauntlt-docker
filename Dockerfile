@@ -7,6 +7,8 @@ FROM ubuntu:26.04@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab0
 ENV ARACHNI_VERSION=1.6.1.3-0.6.1.1
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Gauntlt pins ffi 1.9.18, which cannot compile against Ubuntu 26.04's Ruby.
+# Install its dependencies with ffi 1.17 and relax the installed gemspec.
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends gcc libc6-dev libffi-dev make ruby ruby-dev && \
@@ -15,7 +17,9 @@ RUN \
         libcups2t64 libdrm2 libx11-6 libxcomposite1 libxdamage1 libxext6 \
         libxfixes3 libxrandr2 libgbm1 libxcb1 libxkbcommon0 libpango-1.0-0 \
         libcairo2 libasound2t64 libatspi2.0-0t64 && \
-    gem install gauntlt && \
+    gem install --no-document aruba:0.7.4 cucumber:1.3.20 ffi:1.17.4 nokogiri trollop && \
+    gem install --no-document --ignore-dependencies gauntlt -v 1.0.13 && \
+    sed -i 's/"= 1.9.18"/"~> 1.17"/' /var/lib/gems/*/specifications/gauntlt-1.0.13.gemspec && \
     sed -i 's/File.exists/File.exist/g' /var/lib/gems/*/gems/gauntlt-*/lib/gauntlt/attack_adapters/support/*_helper.rb && \
     apt-get remove -y gcc libc6-dev libffi-dev make ruby-dev && \
     apt-get autoremove -y && \
