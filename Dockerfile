@@ -10,7 +10,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends gcc libc6-dev libffi-dev make ruby ruby-dev && \
-    apt-get install -y --no-install-recommends curl wget && \
+    apt-get install -y --no-install-recommends curl wget \
+        libglib2.0-0t64 libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 \
+        libcups2t64 libdrm2 libx11-6 libxcomposite1 libxdamage1 libxext6 \
+        libxfixes3 libxrandr2 libgbm1 libxcb1 libxkbcommon0 libpango-1.0-0 \
+        libcairo2 libasound2t64 libatspi2.0-0t64 && \
     gem install gauntlt && \
     sed -i 's/File.exists/File.exist/g' /var/lib/gems/*/gems/gauntlt-*/lib/gauntlt/attack_adapters/support/*_helper.rb && \
     apt-get remove -y gcc libc6-dev libffi-dev make ruby-dev && \
