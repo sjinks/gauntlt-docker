@@ -41,6 +41,11 @@ jobs:
           cache-to: type=gha,mode=max
           no-cache: ${{ github.event_name == 'workflow_dispatch' }}
 
+      - name: Check Arachni browser dependencies
+        run: |
+          docker run --rm --entrypoint sh ghcr.io/sjinks/gauntlt:latest -c \
+            'ldd "/usr/local/arachni-${ARACHNI_VERSION}/.system/opt/google/chrome/chrome" > /tmp/chrome-libs && ! grep -F "not found" /tmp/chrome-libs && "/usr/local/arachni-${ARACHNI_VERSION}/.system/usr/bin/chromedriver" --version'
+
       - name: Run tests
         run: |
           mkdir -m 0777 tmp
