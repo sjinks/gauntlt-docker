@@ -2,7 +2,7 @@
 # from our last published image, pinned so future image builds cannot change it.
 FROM ghcr.io/sjinks/gauntlt@sha256:0d4dc46321564f3687f42dae56beab54194308b376283cce5305ec7f542d2c92 AS arachni
 
-FROM ubuntu:26.04@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c
+FROM ubuntu:26.04@sha256:065aa8626841f16057b78b027b464cd59c4fac36c204c72dcbf48d66f5fa8a96
 
 ENV ARACHNI_VERSION=1.6.1.3-0.6.1.1
 ENV DEBIAN_FRONTEND=noninteractive
