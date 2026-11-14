@@ -1,6 +1,6 @@
 # The upstream Arachni release assets were removed. Preserve the installation
 # from our last published image, pinned so future image builds cannot change it.
-FROM ghcr.io/sjinks/gauntlt@sha256:6ec31e415af184c7cce15393839bcf2a62accf67191dc703501a25e619f0d8bd AS arachni
+FROM ghcr.io/sjinks/gauntlt@sha256:5bfbc2ec4e0635c6dceb658c3427d0dd9363e8d846ed34b4c3909b3ffdd47028 AS arachni
 
 FROM ubuntu:26.04@sha256:065aa8626841f16057b78b027b464cd59c4fac36c204c72dcbf48d66f5fa8a96
 
