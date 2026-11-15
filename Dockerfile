@@ -1,10 +1,5 @@
-# The upstream Arachni release assets were removed. Preserve the installation
-# from our last published image, pinned so future image builds cannot change it.
-FROM ghcr.io/sjinks/gauntlt@sha256:6ec31e415af184c7cce15393839bcf2a62accf67191dc703501a25e619f0d8bd AS arachni
-
 FROM ubuntu:26.04@sha256:065aa8626841f16057b78b027b464cd59c4fac36c204c72dcbf48d66f5fa8a96
 
-ENV ARACHNI_VERSION=1.6.1.3-0.6.1.1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Gauntlt pins ffi 1.9.18, which cannot compile against Ubuntu 26.04's Ruby.
@@ -27,11 +22,6 @@ RUN \
 
 # Install Attack tools
 WORKDIR /opt
-
-# arachni
-COPY --from=arachni /usr/local/arachni-${ARACHNI_VERSION} /usr/local/arachni-${ARACHNI_VERSION}
-RUN \
-    ln -s "/usr/local/arachni-${ARACHNI_VERSION}/bin/"* /usr/local/bin/
 
 # Nikto
 RUN \
