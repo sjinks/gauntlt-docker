@@ -1,4 +1,4 @@
-FROM ubuntu:26.04@sha256:065aa8626841f16057b78b027b464cd59c4fac36c204c72dcbf48d66f5fa8a96
+FROM kalilinux/kali-rolling:latest@sha256:6ec743d9fc5cd397451eeddeff3869bcfab5de9bd5dec5b1f34cbfbd80313073
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -7,11 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends gcc libc6-dev libffi-dev make ruby ruby-dev && \
-    apt-get install -y --no-install-recommends curl wget \
-        libglib2.0-0t64 libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 \
-        libcups2t64 libdrm2 libx11-6 libxcomposite1 libxdamage1 libxext6 \
-        libxfixes3 libxrandr2 libgbm1 libxcb1 libxkbcommon0 libpango-1.0-0 \
-        libcairo2 libasound2t64 libatspi2.0-0t64 && \
+    apt-get install -y --no-install-recommends curl wget && \
     gem install --no-document aruba:0.7.4 cucumber:1.3.20 ffi:1.17.4 nokogiri trollop && \
     gem install --no-document --ignore-dependencies gauntlt -v 1.0.13 && \
     sed -i 's/"= 1.9.18"/"~> 1.17"/' /var/lib/gems/*/specifications/gauntlt-1.0.13.gemspec && \
@@ -21,52 +17,17 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 # Install Attack tools
-WORKDIR /opt
-
-# Nikto
 RUN \
     apt-get update && \
-    apt-get install -y libtimedate-perl libnet-ssleay-perl && \
+    apt-get install -y --no-install-recommends wapiti nikto sqlmap dirb nmap sslyze && \
+    apt-get install -y libcap2-bin python-is-python3 && \
     rm -rf /var/lib/apt/lists/* && \
-    mkdir -p nikto && \
-    cd nikto && \
-    wget https://github.com/sullo/nikto/tarball/master -O - | tar -xz --strip-components=1 -f - && \
-    rm -rf .github devdocs documentation && \
-    cd program && \
-    echo "EXECDIR=/opt/nikto/program" >> nikto.conf && \
-    ln -s /opt/nikto/program/nikto.conf /etc/nikto.conf && \
-    chmod +x nikto.pl && \
-    ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto
+    setcap cap_net_raw,cap_net_bind_service+ep /usr/lib/nmap/nmap
 
-# sqlmap
-ENV SQLMAP_PATH=/opt/sqlmap/sqlmap.py
-RUN \
-    mkdir sqlmap && \
-    cd sqlmap && \
-    wget https://github.com/sqlmapproject/sqlmap/tarball/master -O - | tar -xz --strip-components=1 -f - && \
-    rm -rf .github doc
-
-# dirb
 ENV DIRB_WORDLISTS=/usr/share/dirb/wordlists
-RUN \
-    apt-get update && \
-    apt-get install -y dirb && \
-    rm -rf /var/lib/apt/lists/*
+ENV SSLYZE_PATH=/usr/bin/sslyze
 
-# nmap
-RUN apt-get update && \
-    apt-get install -y nmap && \
-    rm -rf /var/lib/apt/lists/*
+RUN useradd -m -s /bin/bash kali
 
-# sslyze
-ENV SSLYZE_PATH=/usr/local/bin/sslyze
-RUN \
-    apt-get update && \
-    apt-get install -y --no-install-recommends python-is-python3 python3 python3-pip && \
-    pip install --break-system-packages sslyze && \
-    apt-get remove -y python3-pip && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-USER ubuntu
+USER kali
 ENTRYPOINT [ "/usr/local/bin/gauntlt" ]
